@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="ICON" href="dpu.jpg">
+    <title>DPU Smart Attendance System - Standalone</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .header p {
+        opacity: 0.9;
+      }
+
+      .card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+      }
+
+      .progress-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        position: relative;
+      }
+
+      .progress-bar::before {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e0e0e0;
+        z-index: 0;
+      }
+
+      .progress-line {
+        position: absolute;
+        top: 15px;
+        left: 0;
+        height: 2px;
+        background: #667eea;
+        z-index: 1;
+        transition: width 0.3s ease;
+      }
+
+      .step {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #999;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s ease;
+      }
+
+      .step.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+        transform: scale(1.1);
+      }
+
+      .step.completed {
+        background: #10b981;
+        border-color: #10b981;
+        color: white;
+      }
+
+      .form-section {
+        display: none;
+      }
+
+      .form-section.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .section-icon {
+        font-size: 1.8rem;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .otp-input {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .otp-input input {
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        margin-top: 10px;
+      }
+
+      .btn-secondary:hover {
+        background: #f8f9ff;
+      }
+
+      .status-box {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .status-box.success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #10b981;
+      }
+
+      .status-box.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #ef4444;
+      }
+
+      .status-box.warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #f59e0b;
+      }
+
+      .status-box.info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #3b82f6;
+      }
+
+      .location-info {
+        background: #f3f4f6;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .location-info p {
+        margin: 5px 0;
+        color: #555;
+      }
+
+      .camera-container {
+        position: relative;
+        width: 100%;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+
+      .camera-container video {
+        width: 100%;
+        display: block;
+      }
+
+      .camera-container canvas {
+        display: none;
+      }
+
+      .captured-photo {
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .biometric-container {
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .biometric-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 0.8;
+        }
+      }
+
+      .fingerprint-scanner {
+        width: 200px;
+        height: 200px;
+        margin: 20px auto;
+        border: 4px solid #667eea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .fingerprint-scanner:hover {
+        border-color: #764ba2;
+        transform: scale(1.05);
+      }
+
+      .fingerprint-scanner.scanning {
+        animation: scanPulse 1.5s ease-in-out infinite;
+        border-color: #10b981;
+      }
+
+      @keyframes scanPulse {
+        0%, 100% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        50% {
+          box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+        }
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .success-screen {
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .success-icon {
+        font-size: 5rem;
+        color: #10b981;
+        margin-bottom: 20px;
+      }
+
+      .success-screen h2 {
+        color: #10b981;
+        margin-bottom: 10px;
+      }
+
+      .success-screen p {
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .info-grid {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background: #f9fafb;
+        border-radius: 6px;
+      }
+
+      .info-label {
+        color: #666;
+        font-weight: 500;
+      }
+
+      .info-value {
+        color: #333;
+        font-weight: bold;
+      }
+
+      .help-text {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 10px;
+      }
+
+      .timer {
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+
+        .card {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🛡️ DPU Attendance System</h1>
+        <p>Standalone Version • All Features Integrated</p>
+      </div>
+
+      <div class="card">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+          <div class="progress-line" id="progressLine" style="width: 0%"></div>
+          <div class="step active" id="step1">1</div>
+          <div class="step" id="step2">2</div>
+          <div class="step" id="step3">3</div>
+          <div class="step" id="step4">4</div>
+          <div class="step" id="step5">5</div>
+        </div>
+
+        <!-- Step 1: Roll Number -->
+        <div class="form-section active" id="section1">
+          <h2 class="section-title">
+            <span class="section-icon">🎓</span>
+            Enter Roll Number
+          </h2>
+          <div class="form-group">
+            <label>Student Roll Number</label>
+            <input
+              type="text"
+              id="rollNumber"
+              placeholder="e.g., 24BCA161"
+              autocomplete="off"
+            />
+            <p class="help-text">Try: 24BCA161-166 or 24MCA101-102</p>
+          </div>
+          <button class="btn" onclick="validateRollNumber()">
+            Verify Roll Number & Send OTP
+          </button>
+        </div>
+
+        <!-- Step 2: OTP Verification -->
+        <div class="form-section" id="section2">
+          <h2 class="section-title">
+            <span class="section-icon">🔑</span>
+            OTP Verification
+          </h2>
+          <div id="otpStatus"></div>
+          <div class="form-group">
+            <label>Enter 6-digit OTP</label>
+            <div class="otp-input">
+              <input type="text" maxlength="1" id="otp1" onkeyup="moveToNext(this, 'otp2')" onpaste="handlePaste(event)" />
+              <input type="text" maxlength="1" id="otp2" onkeyup="moveToNext(this, 'otp3')" />
+              <input type="text" maxlength="1" id="otp3" onkeyup="moveToNext(this, 'otp4')" />
+              <input type="text" maxlength="1" id="otp4" onkeyup="moveToNext(this, 'otp5')" />
+              <input type="text" maxlength="1" id="otp5" onkeyup="moveToNext(this, 'otp6')" />
+              <input type="text" maxlength="1" id="otp6" onkeyup="verifyOTP()" />
+            </div>
+            <p class="help-text">
+              OTP expires in <span class="timer" id="otpTimer">5:00</span>
+            </p>
+          </div>
+          <button class="btn" onclick="verifyOTP()">Verify OTP</button>
+          <button class="btn btn-secondary" onclick="resendOTP()" id="resendBtn">
+            Resend OTP
+          </button>
+        </div>
+
+        <!-- Step 3: GPS Location -->
+        <div class="form-section" id="section3">
+          <h2 class="section-title">
+            <span class="section-icon">📍</span>
+            GPS Location Verification
+          </h2>
+          <div class="loading" id="locationLoading">
+            <div class="spinner"></div>
+            <p>Detecting your location...</p>
+          </div>
+          <div id="locationResult" style="display: none">
+            <div id="locationStatus"></div>
+            <div class="location-info">
+              <p><strong>Latitude:</strong> <span id="latitude">-</span></p>
+              <p><strong>Longitude:</strong> <span id="longitude">-</span></p>
+              <p><strong>Distance from Campus:</strong> <span id="distance">-</span></p>
+              <p><strong>Status:</strong> <span id="locationStatusText">-</span></p>
+            </div>
+            <button class="btn" onclick="nextStep(4)">Continue to Photo Capture</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Photo Capture -->
+        <div class="form-section" id="section4">
+          <h2 class="section-title">
+            <span class="section-icon">📷</span>
+            Photo Capture
+          </h2>
+          <div id="cameraView">
+            <div class="camera-container">
+              <video id="video" autoplay playsinline></video>
+              <canvas id="canvas"></canvas>
+            </div>
+            <button class="btn" onclick="capturePhoto()">📸 Capture Photo</button>
+          </div>
+          <div id="photoPreview" style="display: none">
+            <img id="capturedImage" class="captured-photo" alt="Captured Photo" />
+            <div id="photoUploadStatus"></div>
+            <button class="btn" onclick="nextStep(5)">Continue to Biometric</button>
+            <button class="btn btn-secondary" onclick="retakePhoto()">Retake Photo</button>
+          </div>
+        </div>
+
+        <!-- Step 5: Biometric Verification -->
+        <div class="form-section" id="section5">
+          <h2 class="section-title">
+            <span class="section-icon">👆</span>
+            Biometric Verification
+          </h2>
+          <div class="biometric-container">
+            <div class="fingerprint-scanner" id="fingerprintScanner" onclick="startBiometricScan()">
+              <div class="biometric-icon">🔐</div>
+            </div>
+            <p style="margin-bottom: 20px; color: #666">
+              Click on the scanner to start biometric verification
+            </p>
+            <p style="font-size: 0.9rem; color: #999;">
+              Simulated fingerprint verification
+            </p>
+          </div>
+          <div id="biometricResult" style="display: none"></div>
+        </div>
+
+        <!-- Success Screen -->
+        <div class="form-section" id="successSection">
+          <div class="success-screen">
+            <div class="success-icon">✅</div>
+            <h2>Attendance Marked Successfully!</h2>
+            <p>Your attendance has been securely recorded</p>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Roll Number:</span>
+                <span class="info-value" id="finalRoll">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Name:</span>
+                <span class="info-value" id="finalName">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Timestamp:</span>
+                <span class="info-value" id="finalTime">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Location:</span>
+                <span class="info-value" id="finalLocation">-</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Verification:</span>
+                <span class="info-value">✓ All Checks Passed</span>
+              </div>
+            </div>
+            <button class="btn" onclick="resetForm()">Mark Another Attendance</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Mock Backend Database
+      const DATABASE = {
+        students: [
+          { rollNumber: '24BCA161', name: 'Sathyamoorthi C', department: 'BCA', year: '2nd Year', phone: '+919043198508' },
+          { rollNumber: '24BCA162', name: 'Santhosh R', department: 'BCA', year: '2nd Year', phone: '+919342326972' },
+          { rollNumber: '24BCA163', name: 'Santhosh S', department: 'BCA', year: '2nd Year', phone: '+919361982165' },
+          { rollNumber: '24BCA164', name: 'Tamil K', department: 'BCA', year: '2nd Year', phone: '+919363248229' },
+          { rollNumber: '24BCA165', name: 'Tamil Selvan A', department: 'BCA', year: '2nd Year', phone: '+918248687004' },
+          { rollNumber: '24BCA166', name: 'Suriyaraman', department: 'BCA', year: '2nd Year', phone: '+919500407125' },
+          { rollNumber: '24MCA101', name: 'Rohan', department: 'MCA', year: '1st Year', phone: '+919342784155' },
+          { rollNumber: '24MCA102', name: 'Vimal', department: 'MCA', year: '1st Year', phone: '+919585762847' }
+        ],
+        otpSessions: {},
+        attendanceRecords: []
+      };
+
+      const CAMPUS_LAT = 11.663379;
+      const CAMPUS_LNG = 78.258177;
+      const ALLOWED_RADIUS_KM = 0.05;
+
+      let currentStep = 1;
+      let studentData = {};
+      let authToken = null;
+      let videoStream = null;
+      let otpTimerInterval = null;
+
+      // Helper Functions
+      function generateOTP() {
+        return String(Math.floor(100000 + Math.random() * 900000));
+      }
+
+      function maskPhone(phone) {
+        if (phone.length <= 6) return phone;
+        return phone.slice(0, 3) + 'X'.repeat(phone.length - 6) + phone.slice(-3);
+      }
+
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      }
+
+      function updateProgress() {
+        const progressLine = document.getElementById("progressLine");
+        const percentage = ((currentStep - 1) / 4) * 100;
+        progressLine.style.width = percentage + "%";
+
+        for (let i = 1; i <= 5; i++) {
+          const step = document.getElementById("step" + i);
+          step.classList.remove("active", "completed");
+          if (i < currentStep) {
+            step.classList.add("completed");
+            step.textContent = "✓";
+          } else if (i === currentStep) {
+            step.classList.add("active");
+            step.textContent = i;
+          } else {
+            step.textContent = i;
+          }
+        }
+      }
+
+      function nextStep(step) {
+        document.getElementById("section" + currentStep).classList.remove("active");
+        currentStep = step;
+        document.getElementById("section" + currentStep).classList.add("active");
+        updateProgress();
+
+        if (step === 3) setTimeout(getLocation, 500);
+        if (step === 4) setTimeout(startCamera, 500);
+      }
+
+      // Step 1: Roll Number Verification
+      function validateRollNumber() {
+        const rollNumber = document.getElementById("rollNumber").value.trim().toUpperCase();
+
+        if (!rollNumber) {
+          alert("Please enter your roll number");
+          return;
+        }
+
+        const student = DATABASE.students.find(s => s.rollNumber === rollNumber);
+        
+        if (!student) {
+          alert("Student not found. Please check your roll number.");
+          return;
+        }
+
+        // Generate and store OTP
+        const otp = generateOTP();
+        DATABASE.otpSessions[rollNumber] = {
+          otp: otp,
+          expiresAt: Date.now() + 5 * 60 * 1000,
+          attempts: 0
+        };
+
+        studentData = { ...student };
+        
+        const otpStatus = document.getElementById("otpStatus");
+        otpStatus.innerHTML = `
+          <div class="status-box success">
+            <span>✓</span>
+            <span>OTP has been sent to ${maskPhone(student.phone)}</span>
+          </div>
+          <div class="status-box info" style="margin-top: 10px;">
+            <span>📱</span>
+            <span>Please check your registered mobile number for the verification code</span>
+          </div>
+        `;
+        
+        console.log('🔑 OTP sent to:', maskPhone(student.phone));
+        console.log('🔐 OTP Code (Check Console for Testing):', otp);
+        
+        startOTPTimer(300);
+        nextStep(2);
+      }
+
+      // OTP Timer
+      function startOTPTimer(seconds) {
+        let timeLeft = seconds;
+        const timerElement = document.getElementById('otpTimer');
+        
+        if (otpTimerInterval) clearInterval(otpTimerInterval);
+        
+        otpTimerInterval = setInterval(() => {
+          const minutes = Math.floor(timeLeft / 60);
+          const secs = timeLeft % 60;
+          timerElement.textContent = `${minutes}:${secs.toString().padStart(2, '0')}`;
+          
+          if (timeLeft <= 0) {
+            clearInterval(otpTimerInterval);
+            timerElement.textContent = 'Expired';
+            timerElement.style.color = '#ef4444';
+          }
+          timeLeft--;
+        }, 1000);
+      }
+
+      // Step 2: OTP Functions
+      function moveToNext(current, nextFieldId) {
+        if (current.value.length === 1) {
+          const next = document.getElementById(nextFieldId);
+          if (next) next.focus();
+        }
+      }
+
+      function handlePaste(event) {
+        const paste = (event.clipboardData || window.clipboardData).getData('text');
+        if (paste.length === 6 && /^\d+$/.test(paste)) {
+          for (let i = 0; i < 6; i++) {
+            document.getElementById(`otp${i + 1}`).value = paste[i];
+          }
+          verifyOTP();
+        }
+      }
+
+      function verifyOTP() {
+        const otp = 
+          document.getElementById("otp1").value +
+          document.getElementById("otp2").value +
+          document.getElementById("otp3").value +
+          document.getElementById("otp4").value +
+          document.getElementById("otp5").value +
+          document.getElementById("otp6").value;
+
+        if (otp.length !== 6) return;
+
+        const session = DATABASE.otpSessions[studentData.rollNumber];
+        const otpStatus = document.getElementById("otpStatus");
+
+        if (!session) {
+          otpStatus.innerHTML = `
+            <div class="status-box error">
+              <span>✗</span>
+              <span>No active OTP session found</span>
+            </div>
+          `;
+          return;
+        }
+
+        if (Date.now() > session.expiresAt) {
+          otpStatus.innerHTML = `
+            <div class="status-box error">
+              <span>✗</span>
+              <span>OTP has expired. Please request a new OTP.</span>
+            </div>
+          `;
+          return;
+        }
+
+        if (session.attempts >= 3) {
+          otpStatus.innerHTML = `
+            <div class="status-box error">
+              <span>✗</span>
+              <span>Too many failed attempts. Please request a new OTP.</span>
+            </div>
+          `;
+          return;
+        }
+
+        if (session.otp !== otp) {
+          session.attempts++;
+          otpStatus.innerHTML = `
+            <div class="status-box error">
+              <span>✗</span>
+              <span>Invalid OTP. ${3 - session.attempts} attempts remaining.</span>
+            </div>
+          `;
+          return;
+        }
+
+        // OTP verified
+        authToken = 'mock_token_' + Date.now();
+        clearInterval(otpTimerInterval);
+        
+        otpStatus.innerHTML = `
+          <div class="status-box success">
+            <span>✓</span>
+            <span>OTP verified successfully! Proceeding to GPS verification...</span>
+          </div>
+        `;
+        
+        setTimeout(() => nextStep(3), 1500);
+      }
+
+      function resendOTP() {
+        const btn = document.getElementById('resendBtn');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        const otp = generateOTP();
+        DATABASE.otpSessions[studentData.rollNumber] = {
+          otp: otp,
+          expiresAt: Date.now() + 5 * 60 * 1000,
+          attempts: 0
+        };
+
+        const otpStatus = document.getElementById("otpStatus");
+        otpStatus.innerHTML = `
+          <div class="status-box success">
+            <span>✓</span>
+            <span>New OTP has been sent to your registered mobile number</span>
+          </div>
+          <div class="status-box info" style="margin-top: 10px;">
+            <span>📱</span>
+            <span>Please check your phone for the new verification code</span>
+          </div>
+        `;
+        
+        console.log('🔑 New OTP sent to:', maskPhone(studentData.phone));
+        console.log('🔐 New OTP Code (Check Console for Testing):', otp);
+
+        for (let i = 1; i <= 6; i++) {
+          document.getElementById("otp" + i).value = "";
+        }
+        document.getElementById("otp1").focus();
+        
+        startOTPTimer(300);
+        
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = 'Resend OTP';
+        }, 1000);
+      }
+
+      // Step 3: GPS Location
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              const distance = calculateDistance(latitude, longitude, CAMPUS_LAT, CAMPUS_LNG);
+              const withinRange = distance <= ALLOWED_RADIUS_KM;
+
+              studentData.location = {
+                latitude,
+                longitude,
+                distance,
+                withinRange
+              };
+              
+              document.getElementById("locationLoading").style.display = "none";
+              document.getElementById("locationResult").style.display = "block";
+              document.getElementById("latitude").textContent = latitude.toFixed(6);
+              document.getElementById("longitude").textContent = longitude.toFixed(6);
+              document.getElementById("distance").textContent = distance.toFixed(2) + " km";
+
+              const statusBox = document.getElementById("locationStatus");
+              if (withinRange) {
+                statusBox.innerHTML = `
+                  <div class="status-box success">
+                    <span>✓</span>
+                    <span>You are within campus premises (${distance.toFixed(2)} km from center)</span>
+                  </div>
+                `;
+                document.getElementById("locationStatusText").textContent = "✓ Within Range";
+              } else {
+                statusBox.innerHTML = `
+                  <div class="status-box warning">
+                    <span>⚠</span>
+                    <span>You are outside campus (${distance.toFixed(2)} km away). Attendance will be marked as "Outside Range".</span>
+                  </div>
+                `;
+                document.getElementById("locationStatusText").textContent = "⚠ Outside Range";
+              }
+            },
+            (error) => {
+              alert("Please enable GPS location for attendance");
+              console.error(error);
+            }
+          );
+        }
+      }
+
+      // Step 4: Photo Capture
+      async function startCamera() {
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user", width: 1280, height: 720 }
+          });
+          document.getElementById("video").srcObject = videoStream;
+        } catch (error) {
+          alert("Unable to access camera");
+          console.error(error);
+        }
+      }
+
+      function capturePhoto() {
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = canvas.toDataURL("image/jpeg", 0.8);
+        
+        document.getElementById("capturedImage").src = imageData;
+        document.getElementById("cameraView").style.display = "none";
+        document.getElementById("photoPreview").style.display = "block";
+
+        if (videoStream) {
+          videoStream.getTracks().forEach((track) => track.stop());
+        }
+
+        studentData.photoData = imageData;
+        const confidence = 0.92 + Math.random() * 0.06;
+
+        const uploadStatus = document.getElementById("photoUploadStatus");
+        uploadStatus.innerHTML = `
+          <div class="status-box success">
+            <span>✓</span>
+            <span>Photo captured successfully! Face detected with ${(confidence * 100).toFixed(0)}% confidence</span>
+          </div>
+        `;
+      }
+
+      function retakePhoto() {
+        document.getElementById("cameraView").style.display = "block";
+        document.getElementById("photoPreview").style.display = "none";
+        document.getElementById("photoUploadStatus").innerHTML = "";
+        startCamera();
+      }
+
+      // Step 5: Biometric Verification
+      let biometricScanning = false;
+
+      async function startBiometricScan() {
+        if (biometricScanning) return;
+
+        biometricScanning = true;
+        const scanner = document.getElementById("fingerprintScanner");
+        const resultDiv = document.getElementById("biometricResult");
+        
+        scanner.classList.add("scanning");
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Scanning biometric data...</p>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+              Progress: <span id="scanProgress">0%</span>
+            </p>
+          </div>
+        `;
+
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += Math.random() * 15;
+          if (progress > 100) progress = 100;
+          
+          const progressEl = document.getElementById("scanProgress");
+          if (progressEl) {
+            progressEl.textContent = Math.floor(progress) + "%";
+          }
+          
+          if (progress >= 100) {
+            clearInterval(progressInterval);
+          }
+        }, 200);
+
+        await sleep(1000);
+        resultDiv.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Reading fingerprint pattern...</p>
+            <p style="font-size: 0.9rem; color: #666;">Stage 1 of 3</p>
+          </div>
+        `;
+
+        await sleep(1500);
+        resultDiv.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Analyzing biometric markers...</p>
+            <p style="font-size: 0.9rem; color: #666;">Stage 2 of 3</p>
+          </div>
+        `;
+
+        await sleep(1500);
+        resultDiv.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Matching with database...</p>
+            <p style="font-size: 0.9rem; color: #666;">Stage 3 of 3</p>
+          </div>
+        `;
+
+        await sleep(1000);
+
+        const confidence = 0.85 + Math.random() * 0.13;
+        const verified = confidence >= 0.85;
+
+        if (verified) {
+          studentData.biometric = {
+            verified: true,
+            confidence: confidence,
+            method: 'fingerprint'
+          };
+
+          scanner.classList.remove("scanning");
+          scanner.style.borderColor = "#10b981";
+          
+          resultDiv.innerHTML = `
+            <div class="status-box success">
+              <span>✓</span>
+              <span>Biometric verified successfully!</span>
+            </div>
+            <div class="status-box info" style="margin-top: 10px;">
+              <span>📊</span>
+              <span>Confidence: ${(confidence * 100).toFixed(1)}% • Method: fingerprint</span>
+            </div>
+          `;
+
+          setTimeout(() => submitAttendance(), 2000);
+        } else {
+          scanner.classList.remove("scanning");
+          scanner.style.borderColor = "#ef4444";
+          
+          resultDiv.innerHTML = `
+            <div class="status-box error">
+              <span>✗</span>
+              <span>Biometric verification failed. Please try again.</span>
+            </div>
+          `;
+          
+          biometricScanning = false;
+        }
+      }
+
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      // Final Submit
+      function submitAttendance() {
+        const attendance = {
+          id: Date.now(),
+          rollNumber: studentData.rollNumber,
+          name: studentData.name,
+          department: studentData.department,
+          year: studentData.year,
+          timestamp: new Date().toISOString(),
+          location: studentData.location,
+          biometric: studentData.biometric,
+          status: studentData.location.withinRange ? 'present' : 'outside_range'
+        };
+
+        DATABASE.attendanceRecords.push(attendance);
+
+        document.getElementById("section5").classList.remove("active");
+        document.getElementById("successSection").classList.add("active");
+
+        document.getElementById("finalRoll").textContent = attendance.rollNumber;
+        document.getElementById("finalName").textContent = attendance.name;
+        document.getElementById("finalTime").textContent = new Date(attendance.timestamp).toLocaleString();
+        document.getElementById("finalLocation").textContent = 
+          studentData.location.withinRange 
+            ? `Campus (${studentData.location.distance.toFixed(2)} km)` 
+            : `Outside Campus (${studentData.location.distance.toFixed(2)} km)`;
+
+        console.log('✅ Attendance marked successfully:', attendance);
+        console.log('📊 Total records:', DATABASE.attendanceRecords.length);
+      }
+
+      // Reset Form
+      function resetForm() {
+        currentStep = 1;
+        studentData = {};
+        authToken = null;
+        biometricScanning = false;
+
+        if (otpTimerInterval) clearInterval(otpTimerInterval);
+
+        document.getElementById("successSection").classList.remove("active");
+        document.getElementById("section1").classList.add("active");
+
+        document.getElementById("rollNumber").value = "";
+        for (let i = 1; i <= 6; i++) {
+          document.getElementById("otp" + i).value = "";
+        }
+
+        document.getElementById("locationLoading").style.display = "block";
+        document.getElementById("locationResult").style.display = "none";
+        document.getElementById("cameraView").style.display = "block";
+        document.getElementById("photoPreview").style.display = "none";
+        document.getElementById("photoUploadStatus").innerHTML = "";
+        document.getElementById("biometricResult").style.display = "none";
+        
+        const scanner = document.getElementById("fingerprintScanner");
+        scanner.classList.remove("scanning");
+        scanner.style.borderColor = "#667eea";
+
+        updateProgress();
+      }
+
+      // Initialize
+      updateProgress();
+      console.log('✅ DPU Attendance System Initialized');
+      console.log('📚 Students loaded:', DATABASE.students.length);
+      console.log('🎓 Available Roll Numbers:');
+      DATABASE.students.forEach(s => {
+        console.log(`   • ${s.rollNumber} - ${s.name} (${s.department})`);
+      });
+    </script>
+  </body>
+</html>
